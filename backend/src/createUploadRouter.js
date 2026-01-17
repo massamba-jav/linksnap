@@ -14,7 +14,6 @@ function createUploadRouter() {
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: mbToBytes(process.env.MAX_FILE_SIZE_MB) }
-    // pas de fileFilter => on accepte tous les types de fichiers
   });
 
   router.post("/", upload.single("file"), async (req, res, next) => {
@@ -29,16 +28,23 @@ function createUploadRouter() {
 
       const publicId = `file_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
+      // IMPORTANT: Cloudinary => image pour images, raw pour PDF et tout le reste
+      const isImage = req.file.mimetype && req.file.mimetype.startsWith("image/");
+      const resourceType = isImage ? "image" : "raw";
+
       const uploaded = await uploadBufferToCloudinary({
         buffer: req.file.buffer,
         folder: uploadsFolder,
         publicId,
-        resourceType: "auto"
+        resourceType
       });
 
       const publicFileUrl = uploaded.secure_url;
 
-      const qrDataUrl = await QRCode.toDataURL(publicFileUrl, {
+      // Optionnel mais utile sur mobile: force le téléchargement
+      const downloadFileUrl = publicFileUrl.replace("/upload/", "/upload/fl_attachment/");
+
+      const qrDataUrl = await QRCode.toDataURL(downloadFileUrl, {
         errorCorrectionLevel: "M",
         width: 512,
         margin: 1
@@ -53,7 +59,10 @@ function createUploadRouter() {
 
       return res.status(200).json({
         publicFileUrl,
-        qrCodeUrl: qrUploaded.secure_url
+        downloadFileUrl,
+        qrCodeUrl: qrUploaded.secure_url,
+        originalFileName: req.file.originalname,
+        mimeType: req.file.mimetype
       });
     } catch (err) {
       next(err);
