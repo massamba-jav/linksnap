@@ -50,7 +50,9 @@ export default function Home() {
         | null;
 
       if (!response.ok) {
-        const message = (data && "error" in data && data.error) || `Erreur upload (${response.status})`;
+        const message =
+          (data && typeof (data as any)?.error?.message === "string" && (data as any).error.message) ||
+          `Erreur upload (${response.status})`;
         setError(message);
         return;
       }
