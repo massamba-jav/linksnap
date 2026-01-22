@@ -46,7 +46,10 @@ function createUploadRouter() {
       // Optionnel mais utile sur mobile: force le téléchargement
       const downloadFileUrl = publicFileUrl.replace("/upload/", "/upload/fl_attachment/");
 
-      const qrDataUrl = await QRCode.toDataURL(downloadFileUrl, {
+      // IMPORTANT:
+      // On encode le lien public (pas fl_attachment) car iOS/Safari gère mieux l'ouverture
+      // d'une URL "viewable" qu'un lien forçant le téléchargement.
+      const qrDataUrl = await QRCode.toDataURL(publicFileUrl, {
         errorCorrectionLevel: "M",
         width: 512,
         margin: 1
@@ -63,6 +66,7 @@ function createUploadRouter() {
         publicFileUrl,
         downloadFileUrl,
         qrCodeUrl: qrUploaded.secure_url,
+        qrTargetUrl: publicFileUrl,
         originalFileName: req.file.originalname,
         mimeType: req.file.mimetype
       });
