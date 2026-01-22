@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.all("*", (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ error: { message: "Route not found" } });
 });
 

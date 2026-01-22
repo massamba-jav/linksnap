@@ -7,7 +7,7 @@ const app = express();
 
 const corsMw = createCorsMiddleware();
 app.use(corsMw);
-app.options("*", corsMw);
+app.options(/.*/, corsMw);
 
 // Supporte les 2 cas : la fonction reçoit "/" ou "/upload"
 app.use("/", createUploadRouter());
